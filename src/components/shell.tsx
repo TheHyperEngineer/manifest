@@ -18,7 +18,10 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="min-h-dvh bg-paper text-ink md:flex">
       <a
         href="#content"
-        className={cn(focusRing, "sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-ink focus:px-3 focus:py-2 focus:text-paper")}
+        className={cn(
+          focusRing,
+          "sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-ink focus:px-3 focus:py-2 focus:text-paper",
+        )}
       >
         Skip to content
       </a>
@@ -31,12 +34,37 @@ export function Shell({ children }: { children: ReactNode }) {
           <Link
             to="/studio"
             search={{ page: active === "studio" ? studioPage : active }}
-            className={cn(focusRing, "inline-flex min-h-11 items-center text-sm text-paper/80 md:hidden")}
+            className={cn(
+              focusRing,
+              "inline-flex min-h-11 items-center text-sm text-paper/80 md:hidden",
+            )}
           >
             Studio
           </Link>
         </div>
-        <nav aria-label="Pages" className="mt-4 flex gap-2 overflow-x-auto px-4 pb-4 md:mt-8 md:flex-col md:gap-1 md:overflow-visible md:px-0 md:pb-0">
+        <nav
+          aria-label="Pages"
+          className="mt-4 flex gap-2 overflow-x-auto px-4 pb-4 md:mt-8 md:flex-col md:gap-1 md:overflow-visible md:px-0 md:pb-0"
+        >
+          <Link
+            to="/studio"
+            search={{ page: active === "studio" ? studioPage : active }}
+            aria-current={active === "studio" ? "page" : undefined}
+            className={cn(
+              focusRing,
+              "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-sm md:w-full",
+              active === "studio"
+                ? "bg-paper/10 text-paper"
+                : "text-paper/70 hover:bg-paper/5 hover:text-paper",
+            )}
+          >
+            <AppIcon
+              name="FileCode2"
+              size={16}
+              className={active === "studio" ? "text-paper" : "text-paper/70"}
+            />
+            <span className="truncate">Studio</span>
+          </Link>
           {catalog.pages.map((page) => {
             const on = active === page.id;
             return (
@@ -51,7 +79,11 @@ export function Shell({ children }: { children: ReactNode }) {
                   on ? "bg-paper/10 text-paper" : "text-paper/70 hover:bg-paper/5 hover:text-paper",
                 )}
               >
-                <AppIcon name={page.icon} size={16} className={on ? "text-paper" : "text-paper/70"} />
+                <AppIcon
+                  name={page.icon}
+                  size={16}
+                  className={on ? "text-paper" : "text-paper/70"}
+                />
                 <span className="truncate">{page.title}</span>
               </Link>
             );
@@ -79,7 +111,10 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <main id="content" className={bare ? "min-w-0" : "mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10"}>
+        <main
+          id="content"
+          className={bare ? "min-w-0" : "mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10"}
+        >
           {children}
         </main>
       </div>

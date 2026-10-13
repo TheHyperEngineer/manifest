@@ -1,26 +1,10 @@
 /**
- * Mount once in `__root.tsx` so the Grok preview chrome can drive navigation
- * (and later receive registered routes). Noops when the app is not embedded.
+ * Preview host bridge for embedded preview environments.
+ *
+ * This is intentionally a no-op in a standalone app. The app keeps its normal
+ * router behavior without depending on the Grok preview host bridge.
  */
 
-import { useEffect } from "react";
-import { useRouter } from "@tanstack/react-router";
-import {
-  collectRoutePathsFromTree,
-  installPreviewHostBridge,
-} from "@/lib/preview-host-bridge";
-
 export function PreviewHostBridge() {
-  const router = useRouter();
-
-  useEffect(() => {
-    return installPreviewHostBridge({
-      navigate: (path) => {
-        router.history.push(path);
-      },
-      getRoutePaths: () => collectRoutePathsFromTree(router.routeTree),
-    });
-  }, [router]);
-
   return null;
 }

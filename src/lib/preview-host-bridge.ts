@@ -1,7 +1,7 @@
 /**
- * Guest side of the grok-web ↔ sandbox preview postMessage bridge.
+ * Guest side of the preview host ↔ app postMessage bridge.
  *
- * Activates only when this page is framed by an allowlisted Grok embedder.
+ * Activates only when this page is framed by an allowlisted embedder.
  * Top-level runs (download/export, local `npm run dev`, deployed sites) noop.
  */
 
@@ -15,7 +15,7 @@ export {
   resolveParentEmbedderOrigin,
 } from "./preview-embedder-origin";
 
-export const PREVIEW_BRIDGE_CHANNEL = "grok-preview-bridge" as const;
+export const PREVIEW_BRIDGE_CHANNEL = "app-preview-bridge" as const;
 export const PREVIEW_BRIDGE_VERSION = 1 as const;
 
 const EnvelopeSchema = z.object({
@@ -62,9 +62,9 @@ export function isSafeBridgePath(path: string): boolean {
 }
 
 /**
- * Origin of the Grok embedder framing this page, or null when the page runs
+ * Origin of the embedder framing this page, or null when the page runs
  * top-level (download/export, local `npm run dev`, deployed sites) or under a
- * non-Grok parent. Client-only; null during SSR.
+ * non-allowlisted parent. Client-only; null during SSR.
  */
 export function resolveCurrentEmbedderOrigin(): string | null {
   if (typeof window === "undefined") return null;
@@ -82,7 +82,7 @@ export function resolveCurrentEmbedderOrigin(): string | null {
 
 /**
  * Install host↔guest messaging. Returns a dispose function.
- * Noops (returns a no-op dispose) when not embedded under a Grok parent.
+ * Noops (returns a no-op dispose) when not embedded under an allowlisted parent.
  */
 export function installPreviewHostBridge(
   options: PreviewHostBridgeOptions = {},
@@ -90,7 +90,7 @@ export function installPreviewHostBridge(
   const parentOrigin = resolveCurrentEmbedderOrigin();
   if (parentOrigin === null) return () => {};
 
-  const ROOT_STATE_KEY = "__grokPreviewBridgeRoot";
+  const ROOT_STATE_KEY = "__appPreviewBridgeRoot";
   const originalPushState = window.history.pushState.bind(window.history);
   const originalReplaceState = window.history.replaceState.bind(window.history);
 
@@ -280,6 +280,7 @@ export function collectRoutePathsFromTree(routeTree: unknown): string[] {
       fullPath?: unknown;
       path?: unknown;
       children?: unknown;
+      __children?: unknown;
     };
     const full =
       typeof record.fullPath === "string"
@@ -287,21 +288,22 @@ export function collectRoutePathsFromTree(routeTree: unknown): string[] {
         : typeof record.path === "string"
           ? record.path
           : null;
-    if (full !== null && full !== "") {
-      paths.add(full.startsWith("/") ? full : `/${full}`);
-    } else if (full === "") {
-      paths.add("/");
+
+    if (full && full.startsWith("/")) {
+      paths.add(full);
     }
+
     const children = record.children;
     if (Array.isArray(children)) {
       for (const child of children) walk(child);
-    } else if (children && typeof children === "object") {
-      for (const child of Object.values(children as Record<string, unknown>)) {
-        walk(child);
-      }
+    }
+
+    const nested = record.__children;
+    if (Array.isArray(nested)) {
+      for (const child of nested) walk(child);
     }
   };
 
   walk(routeTree);
-  return [...paths];
+  return [...paths].sort();
 }

@@ -1,0 +1,222 @@
+{
+  "id": "brief",
+  "title": "The floor before noon",
+  "kicker": "Northwind · Hudson yard",
+  "summary": "Orders, the yard, and the dollar. This screen is brief.json.",
+  "icon": "Sun",
+  "state": { "range": "30d" },
+  "sources": [
+    {
+      "id": "windows",
+      "kind": "static",
+      "data": {
+        "7d": {
+          "orders": 18,
+          "load": 64,
+          "exceptions": 1,
+          "collected": 18400,
+          "ordersHint": "since Monday",
+          "loadHint": "kiln hours booked",
+          "exHint": "a crate held in Porto",
+          "cashHint": "received this week",
+          "points": [
+            { "label": "Mon", "revenue": 12 },
+            { "label": "Tue", "revenue": 18 },
+            { "label": "Wed", "revenue": 9 },
+            { "label": "Thu", "revenue": 22 },
+            { "label": "Fri", "revenue": 15 },
+            { "label": "Sat", "revenue": 8 },
+            { "label": "Sun", "revenue": 14 }
+          ]
+        },
+        "30d": {
+          "orders": 74,
+          "load": 72,
+          "exceptions": 2,
+          "collected": 86400,
+          "ordersHint": "open on the books",
+          "loadHint": "of the month’s capacity",
+          "exHint": "still unresolved",
+          "cashHint": "collected in 30 days",
+          "points": [
+            { "label": "W1", "revenue": 48 },
+            { "label": "W2", "revenue": 62 },
+            { "label": "W3", "revenue": 55 },
+            { "label": "W4", "revenue": 71 }
+          ]
+        },
+        "90d": {
+          "orders": 210,
+          "load": 69,
+          "exceptions": 6,
+          "collected": 248000,
+          "ordersHint": "since May",
+          "loadHint": "average kiln load",
+          "exHint": "across the quarter",
+          "cashHint": "collected since May",
+          "points": [
+            { "label": "May", "revenue": 82 },
+            { "label": "Jun", "revenue": 76 },
+            { "label": "Jul", "revenue": 91 },
+            { "label": "Aug", "revenue": 88 },
+            { "label": "Sep", "revenue": 96 },
+            { "label": "Oct", "revenue": 84 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "window",
+      "kind": "derive",
+      "from": "windows",
+      "pick": "{{state.range}}"
+    },
+    {
+      "id": "activity",
+      "kind": "static",
+      "data": [
+        {
+          "title": "Kiln 2 reached cone 6",
+          "meta": "06:40 · Hudson",
+          "body": "The celadon run for Harbor is on the schedule Ada posted."
+        },
+        {
+          "title": "Freight hold cleared",
+          "meta": "08:05 · Porto",
+          "body": "Two crates released onward to Maru House."
+        },
+        {
+          "title": "Lumen asked for a warmer white",
+          "meta": "09:10 · Trade",
+          "body": "Noted on the spring linen contract before the sample ships."
+        }
+      ]
+    },
+    {
+      "id": "fx",
+      "kind": "http",
+      "url": "https://api.frankfurter.dev/v2/rates?base=USD&quotes=EUR,GBP,JPY,CHF"
+    },
+    {
+      "id": "weather",
+      "kind": "http",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=40.75&longitude=-74.01&current=temperature_2m,wind_speed_10m,weather_code&timezone=America%2FNew_York",
+      "pick": "current"
+    }
+  ],
+  "root": {
+    "type": "stack",
+    "gap": "lg",
+    "children": [
+      {
+        "type": "row",
+        "justify": "between",
+        "align": "end",
+        "gap": "md",
+        "children": [
+          {
+            "type": "stack",
+            "gap": "sm",
+            "grow": true,
+            "children": [
+              { "type": "kicker", "text": "Northwind · Hudson yard" },
+              { "type": "heading", "level": 1, "text": "The floor before noon" },
+              {
+                "type": "text",
+                "tone": "muted",
+                "text": "Orders, yard weather, and the dollar. Nothing on this screen is a bespoke page — it is brief.json, drawn with the shared shelf."
+              }
+            ]
+          },
+          {
+            "type": "segmented",
+            "label": "Range",
+            "bind": "state.range",
+            "options": [
+              { "label": "7 days", "value": "7d" },
+              { "label": "30 days", "value": "30d" },
+              { "label": "90 days", "value": "90d" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "grid",
+        "cols": 4,
+        "gap": "md",
+        "children": [
+          { "type": "stat", "label": "Open orders", "value": "{{sources.window.orders}}", "hint": "{{sources.window.ordersHint}}" },
+          { "type": "stat", "label": "Atelier load", "value": "{{sources.window.load | percent}}", "hint": "{{sources.window.loadHint}}" },
+          { "type": "stat", "label": "Exceptions", "value": "{{sources.window.exceptions}}", "hint": "{{sources.window.exHint}}" },
+          { "type": "stat", "label": "Collected", "value": "{{sources.window.collected | currency}}", "hint": "{{sources.window.cashHint}}" }
+        ]
+      },
+      {
+        "type": "grid",
+        "cols": 3,
+        "gap": "md",
+        "children": [
+          {
+            "type": "card",
+            "span": 2,
+            "title": "Collected, in thousands",
+            "children": [
+              {
+                "type": "chart",
+                "variant": "area",
+                "label": "Collected by period",
+                "data": "{{sources.window.points}}",
+                "x": "label",
+                "y": "revenue"
+              }
+            ]
+          },
+          {
+            "type": "stack",
+            "gap": "md",
+            "children": [
+              {
+                "type": "card",
+                "title": "Hudson yard",
+                "source": "weather",
+                "children": [
+                  { "type": "heading", "level": 2, "text": "{{sources.weather.temperature_2m | temp}}" },
+                  { "type": "text", "text": "{{sources.weather.weather_code | weather}}" },
+                  { "type": "text", "tone": "muted", "text": "Wind {{sources.weather.wind_speed_10m | number}} km/h" }
+                ]
+              },
+              {
+                "type": "card",
+                "title": "Dollar",
+                "source": "fx",
+                "children": [
+                  {
+                    "type": "repeat",
+                    "each": "sources.fx",
+                    "gap": "xs",
+                    "template": {
+                      "type": "row",
+                      "justify": "between",
+                      "align": "center",
+                      "children": [
+                        { "type": "text", "text": "{{item.quote}}" },
+                        { "type": "text", "text": "{{item.rate | rate}}" }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "card",
+        "title": "Since the doors opened",
+        "children": [
+          { "type": "timeline", "items": "{{sources.activity}}" }
+        ]
+      }
+    ]
+  }
+}

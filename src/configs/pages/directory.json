@@ -1,0 +1,137 @@
+{
+  "id": "directory",
+  "title": "People on the floor",
+  "kicker": "House",
+  "summary": "A directory with search, a team filter, and a keep list.",
+  "icon": "Users",
+  "state": {
+    "query": "",
+    "team": "all",
+    "selectedId": "p1",
+    "favorites": ["p2"]
+  },
+  "sources": [
+    {
+      "id": "people",
+      "kind": "static",
+      "data": [
+        { "id": "p1", "name": "Ada Voss", "role": "Buyer", "team": "Trade", "loc": "Hudson", "focus": "Linen contracts and hotel work" },
+        { "id": "p2", "name": "Jon Park", "role": "Kiln lead", "team": "Atelier", "loc": "Hudson", "focus": "Cone 6, celadon, charcoal tile" },
+        { "id": "p3", "name": "Mina Cho", "role": "Showroom", "team": "Trade", "loc": "Lisbon", "focus": "Samples, pop-ups, the oak library" },
+        { "id": "p4", "name": "Leo Hart", "role": "Freight", "team": "Ops", "loc": "Porto", "focus": "Crates, holds, and purchase orders" },
+        { "id": "p5", "name": "Ruth Alem", "role": "Dye", "team": "Atelier", "loc": "Hudson", "focus": "Warm whites and linen lots" },
+        { "id": "p6", "name": "Samir Quinn", "role": "Accounts", "team": "Ops", "loc": "Hudson", "focus": "What has actually been collected" }
+      ]
+    },
+    {
+      "id": "visible",
+      "kind": "derive",
+      "from": "people",
+      "search": { "query": "{{state.query}}", "fields": ["name", "role", "loc"] },
+      "where": { "field": "team", "eq": "{{state.team}}", "when": { "path": "state.team", "neq": "all" } }
+    },
+    { "id": "totals", "kind": "derive", "from": "visible", "count": true },
+    {
+      "id": "person",
+      "kind": "derive",
+      "from": "people",
+      "where": { "field": "id", "eq": "{{state.selectedId}}" },
+      "first": true
+    }
+  ],
+  "root": {
+    "type": "stack",
+    "gap": "lg",
+    "children": [
+      {
+        "type": "stack",
+        "gap": "sm",
+        "children": [
+          { "type": "kicker", "text": "House" },
+          { "type": "heading", "level": 1, "text": "People on the floor" },
+          { "type": "text", "tone": "muted", "text": "Pick a person. Keep the ones you are talking to today. Favorites sit in state, the roster is a static source." }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "md",
+        "align": "end",
+        "children": [
+          { "type": "input", "label": "Search", "placeholder": "Name, role, or city", "bind": "state.query", "grow": true },
+          {
+            "type": "segmented",
+            "label": "Team",
+            "bind": "state.team",
+            "options": [
+              { "label": "All", "value": "all" },
+              { "label": "Trade", "value": "Trade" },
+              { "label": "Atelier", "value": "Atelier" },
+              { "label": "Ops", "value": "Ops" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "grid",
+        "cols": 3,
+        "gap": "md",
+        "children": [
+          {
+            "type": "stack",
+            "span": 2,
+            "gap": "sm",
+            "children": [
+              { "type": "text", "tone": "muted", "text": "{{sources.totals.count}} in view" },
+              {
+                "type": "table",
+                "caption": "People",
+                "rows": "{{sources.visible}}",
+                "rowKey": "id",
+                "selectedBind": "state.selectedId",
+                "onRow": [{ "do": "set", "path": "state.selectedId", "value": "{{item.id}}" }],
+                "columns": [
+                  { "key": "name", "label": "Name" },
+                  { "key": "role", "label": "Role" },
+                  { "key": "team", "label": "Team", "format": "badge", "toneMap": { "Atelier": "ink", "Trade": "accent", "Ops": "neutral" } },
+                  { "key": "loc", "label": "City" }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "card",
+            "title": "Profile",
+            "show": "sources.person",
+            "children": [
+              { "type": "avatar", "name": "{{sources.person.name}}", "role": "{{sources.person.role}}" },
+              { "type": "text", "text": "{{sources.person.focus}}" },
+              {
+                "type": "keyvalue",
+                "items": [
+                  { "label": "Team", "value": "{{sources.person.team}}" },
+                  { "label": "City", "value": "{{sources.person.loc}}" }
+                ]
+              },
+              {
+                "type": "button",
+                "label": "Keep on the desk",
+                "icon": "Star",
+                "tone": "quiet",
+                "show": { "path": "state.favorites", "excludes": "{{sources.person.id}}" },
+                "on": { "click": [{ "do": "toggleIn", "path": "state.favorites", "value": "{{sources.person.id}}" }, { "do": "toast", "message": "Kept {{sources.person.name}}" }] }
+              },
+              {
+                "type": "button",
+                "label": "Remove from the desk",
+                "icon": "Star",
+                "tone": "primary",
+                "show": { "path": "state.favorites", "includes": "{{sources.person.id}}" },
+                "on": { "click": [{ "do": "toggleIn", "path": "state.favorites", "value": "{{sources.person.id}}" }] }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

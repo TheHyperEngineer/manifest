@@ -1,0 +1,143 @@
+{
+  "id": "markets",
+  "title": "Weather and the dollar",
+  "kicker": "Live sources",
+  "summary": "Two HTTPS calls declared on the page. Change the city or the base currency and they run again.",
+  "icon": "CircleDollarSign",
+  "state": {
+    "base": "USD",
+    "city": "Hudson",
+    "lat": 40.75,
+    "lon": -74.01
+  },
+  "sources": [
+    {
+      "id": "fx",
+      "kind": "http",
+      "url": "https://api.frankfurter.dev/v2/rates?base={{state.base}}&quotes=USD,EUR,GBP,JPY,CHF,CAD"
+    },
+    {
+      "id": "rates",
+      "kind": "derive",
+      "from": "fx",
+      "where": { "field": "quote", "neq": "{{state.base}}" }
+    },
+    {
+      "id": "weather",
+      "kind": "http",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude={{state.lat}}&longitude={{state.lon}}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=auto",
+      "pick": "current"
+    }
+  ],
+  "root": {
+    "type": "stack",
+    "gap": "lg",
+    "children": [
+      {
+        "type": "stack",
+        "gap": "sm",
+        "children": [
+          { "type": "kicker", "text": "Live sources" },
+          { "type": "heading", "level": 1, "text": "Weather and the dollar" },
+          { "type": "text", "tone": "muted", "text": "Frankfurter and Open-Meteo are named in markets.json. The runtime fetches them. No page-specific client was written." }
+        ]
+      },
+      {
+        "type": "callout",
+        "title": "The URLs are the integration",
+        "body": "Templates fill latitude, longitude, and the base currency from state. Hosts outside the allow list are refused."
+      },
+      {
+        "type": "row",
+        "gap": "md",
+        "align": "end",
+        "children": [
+          {
+            "type": "select",
+            "label": "Base currency",
+            "bind": "state.base",
+            "grow": true,
+            "options": [
+              { "label": "US dollar", "value": "USD" },
+              { "label": "Euro", "value": "EUR" },
+              { "label": "Pound", "value": "GBP" },
+              { "label": "Yen", "value": "JPY" }
+            ]
+          },
+          {
+            "type": "select",
+            "label": "Yard",
+            "value": "{{state.city}}|{{state.lat}}|{{state.lon}}",
+            "grow": true,
+            "onChange": [
+              {
+                "do": "splitSet",
+                "value": "{{event}}",
+                "sep": "|",
+                "into": ["state.city", "state.lat", "state.lon"]
+              }
+            ],
+            "options": [
+              { "label": "Hudson", "value": "Hudson|40.75|-74.01" },
+              { "label": "Lisbon", "value": "Lisbon|38.72|-9.14" },
+              { "label": "Porto", "value": "Porto|41.15|-8.61" },
+              { "label": "Osaka", "value": "Osaka|34.69|135.5" }
+            ]
+          },
+          {
+            "type": "button",
+            "label": "Refresh",
+            "icon": "RefreshCw",
+            "tone": "quiet",
+            "on": {
+              "click": [
+                { "do": "refetch", "source": "fx" },
+                { "do": "refetch", "source": "weather" }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "grid",
+        "cols": 3,
+        "gap": "md",
+        "children": [
+          {
+            "type": "card",
+            "title": "At the yard",
+            "source": "weather",
+            "children": [
+              { "type": "kicker", "text": "{{state.city}}" },
+              { "type": "heading", "level": 2, "text": "{{sources.weather.temperature_2m | temp}}" },
+              { "type": "text", "text": "{{sources.weather.weather_code | weather}}" },
+              { "type": "text", "tone": "muted", "text": "Humidity {{sources.weather.relative_humidity_2m | number}}%" },
+              { "type": "text", "tone": "muted", "text": "Wind {{sources.weather.wind_speed_10m | number}} km/h" }
+            ]
+          },
+          {
+            "type": "card",
+            "span": 2,
+            "title": "Rates",
+            "source": "fx",
+            "children": [
+              { "type": "text", "tone": "muted", "text": "1 {{state.base}} · {{sources.rates.0.date}}" },
+              {
+                "type": "repeat",
+                "each": "sources.rates",
+                "layout": "grid",
+                "cols": 3,
+                "gap": "sm",
+                "template": {
+                  "type": "stat",
+                  "label": "{{item.quote}}",
+                  "value": "{{item.rate | rate}}"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

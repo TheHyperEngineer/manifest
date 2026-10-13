@@ -1,0 +1,7 @@
+{
+  "product": "Manifest",
+  "name": "Northwind",
+  "summary": "Screens declared in JSON. One shelf of components renders the desk.",
+  "defaultPage": "brief",
+  "pages": ["brief", "pipeline", "directory", "tasks", "markets", "gallery"]
+}

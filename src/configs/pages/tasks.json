@@ -1,0 +1,137 @@
+{
+  "id": "tasks",
+  "title": "Open loops",
+  "kicker": "Ops",
+  "summary": "Add, complete, and remove work. All of it is state plus actions.",
+  "icon": "ListChecks",
+  "state": {
+    "draft": "",
+    "filter": "open",
+    "tasks": [
+      { "id": "t1", "title": "Photograph the celadon glaze tests", "done": false, "tag": "Atelier" },
+      { "id": "t2", "title": "Reply to Sable Hotel on lead times", "done": false, "tag": "Trade" },
+      { "id": "t3", "title": "Book the Porto warehouse for Thursday", "done": true, "tag": "Ops" },
+      { "id": "t4", "title": "File the linen certificate", "done": false, "tag": "Ops" },
+      { "id": "t5", "title": "Send Maru the fixture drawings", "done": false, "tag": "Trade" }
+    ]
+  },
+  "sources": [
+    {
+      "id": "visible",
+      "kind": "derive",
+      "fromState": "tasks",
+      "match": {
+        "all": [
+          { "field": "done", "eq": false, "when": { "path": "state.filter", "eq": "open" } },
+          { "field": "done", "eq": true, "when": { "path": "state.filter", "eq": "done" } }
+        ]
+      }
+    },
+    { "id": "open", "kind": "derive", "fromState": "tasks", "where": { "field": "done", "eq": false }, "count": true },
+    { "id": "done", "kind": "derive", "fromState": "tasks", "where": { "field": "done", "eq": true }, "count": true }
+  ],
+  "root": {
+    "type": "stack",
+    "gap": "lg",
+    "children": [
+      {
+        "type": "stack",
+        "gap": "sm",
+        "children": [
+          { "type": "kicker", "text": "Ops" },
+          { "type": "heading", "level": 1, "text": "Open loops" },
+          { "type": "text", "tone": "muted", "text": "Type a line and add it. Checking a row toggles done on that item. No task component was written for Northwind — check, append, and remove are generic actions." }
+        ]
+      },
+      {
+        "type": "grid",
+        "cols": 2,
+        "children": [
+          { "type": "stat", "label": "Still open", "value": "{{sources.open.count}}" },
+          { "type": "stat", "label": "Closed", "value": "{{sources.done.count}}" }
+        ]
+      },
+      {
+        "type": "card",
+        "title": "Add a loop",
+        "children": [
+          {
+            "type": "row",
+            "align": "end",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "input",
+                "label": "What needs doing",
+                "placeholder": "Call the dye room",
+                "bind": "state.draft",
+                "grow": true,
+                "onEnter": [
+                  { "do": "append", "path": "state.tasks", "value": { "id": "{{now}}", "title": "{{state.draft}}", "done": false, "tag": "Inbox" } },
+                  { "do": "set", "path": "state.draft", "value": "" }
+                ]
+              },
+              {
+                "type": "button",
+                "label": "Add",
+                "icon": "Plus",
+                "disabled": { "path": "state.draft", "eq": "" },
+                "on": {
+                  "click": [
+                    { "do": "append", "path": "state.tasks", "value": { "id": "{{now}}", "title": "{{state.draft}}", "done": false, "tag": "Inbox" } },
+                    { "do": "set", "path": "state.draft", "value": "" }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "segmented",
+        "label": "Filter",
+        "bind": "state.filter",
+        "options": [
+          { "label": "Open", "value": "open" },
+          { "label": "Done", "value": "done" },
+          { "label": "All", "value": "all" }
+        ]
+      },
+      {
+        "type": "repeat",
+        "each": "sources.visible",
+        "gap": "sm",
+        "empty": { "type": "empty", "title": "Nothing in this filter", "body": "Add a loop, or look at another cut." },
+        "template": {
+          "type": "card",
+          "children": [
+            {
+              "type": "row",
+              "align": "center",
+              "justify": "between",
+              "gap": "sm",
+              "children": [
+                {
+                  "type": "check",
+                  "grow": true,
+                  "checked": "{{item.done}}",
+                  "label": "{{item.title}}",
+                  "onChange": [{ "do": "toggleField", "path": "state.tasks", "where": { "field": "id", "eq": "{{item.id}}" }, "field": "done" }]
+                },
+                { "type": "badge", "text": "{{item.tag}}", "toneMap": { "Atelier": "ink", "Trade": "accent", "Ops": "neutral", "Inbox": "neutral" } },
+                {
+                  "type": "button",
+                  "icon": "Trash2",
+                  "label": "Remove task",
+                  "hideLabel": true,
+                  "tone": "ghost",
+                  "on": { "click": [{ "do": "remove", "path": "state.tasks", "where": { "field": "id", "eq": "{{item.id}}" } }] }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

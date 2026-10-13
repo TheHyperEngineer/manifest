@@ -1,0 +1,191 @@
+{
+  "id": "pipeline",
+  "title": "Work on the table",
+  "kicker": "Trade",
+  "summary": "Filter the book, open a piece, move its stage. The deals live in page state.",
+  "icon": "Boxes",
+  "state": {
+    "query": "",
+    "stage": "all",
+    "view": "board",
+    "selectedId": "d1",
+    "deals": [
+      { "id": "d1", "company": "Lumen & Co.", "name": "Spring linen, 400 bolts", "value": 42000, "stage": "Proposal", "owner": "Ada Voss", "next": "Send the warmer white" },
+      { "id": "d2", "company": "Harbor Kiln", "name": "Celadon tableware run", "value": 18400, "stage": "Negotiation", "owner": "Jon Park", "next": "Confirm crate count" },
+      { "id": "d3", "company": "Field Atelier", "name": "Oak sample library", "value": 9600, "stage": "Discovery", "owner": "Mina Cho", "next": "Book the showroom" },
+      { "id": "d4", "company": "Sable Hotel", "name": "Lobby textile refresh", "value": 67000, "stage": "Proposal", "owner": "Ada Voss", "next": "Walk the mezzanine" },
+      { "id": "d5", "company": "North Glass", "name": "Amber pendant shades", "value": 22100, "stage": "Won", "owner": "Leo Hart", "next": "Issue the purchase order" },
+      { "id": "d6", "company": "Maru House", "name": "Osaka pop-up fixtures", "value": 30500, "stage": "Negotiation", "owner": "Mina Cho", "next": "Get the freight quote" },
+      { "id": "d7", "company": "Cinder Studio", "name": "Charcoal tile pilot", "value": 7400, "stage": "Discovery", "owner": "Jon Park", "next": "Ship two samples" },
+      { "id": "d8", "company": "Orchard Rooms", "name": "Guest house linens", "value": 15300, "stage": "Won", "owner": "Leo Hart", "next": "Schedule the cut" }
+    ]
+  },
+  "sources": [
+    {
+      "id": "visible",
+      "kind": "derive",
+      "fromState": "deals",
+      "search": { "query": "{{state.query}}", "fields": ["company", "name", "owner"] },
+      "where": { "field": "stage", "eq": "{{state.stage}}", "when": { "path": "state.stage", "neq": "all" } }
+    },
+    { "id": "totals", "kind": "derive", "from": "visible", "count": true, "sum": "value" },
+    {
+      "id": "selected",
+      "kind": "derive",
+      "fromState": "deals",
+      "where": { "field": "id", "eq": "{{state.selectedId}}" },
+      "first": true
+    }
+  ],
+  "root": {
+    "type": "stack",
+    "gap": "lg",
+    "children": [
+      {
+        "type": "stack",
+        "gap": "sm",
+        "children": [
+          { "type": "kicker", "text": "Trade" },
+          { "type": "heading", "level": 1, "text": "Work on the table" },
+          { "type": "text", "tone": "muted", "text": "Search, filter, and move a stage. The book is state inside pipeline.json — not a component written for this screen." }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "md",
+        "align": "end",
+        "children": [
+          { "type": "input", "label": "Search", "placeholder": "Company, piece, or owner", "bind": "state.query", "grow": true },
+          {
+            "type": "segmented",
+            "label": "Stage",
+            "bind": "state.stage",
+            "options": [
+              { "label": "All", "value": "all" },
+              { "label": "Discovery", "value": "Discovery" },
+              { "label": "Proposal", "value": "Proposal" },
+              { "label": "Negotiation", "value": "Negotiation" },
+              { "label": "Won", "value": "Won" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "grid",
+        "cols": 2,
+        "gap": "md",
+        "children": [
+          { "type": "stat", "label": "Showing", "value": "{{sources.totals.count}}", "hint": "pieces in this cut" },
+          { "type": "stat", "label": "Value", "value": "{{sources.totals.sum | currency}}", "hint": "sum of the visible book" }
+        ]
+      },
+      {
+        "type": "tabs",
+        "label": "Layout",
+        "bind": "state.view",
+        "options": [
+          { "label": "Board", "value": "board" },
+          { "label": "List", "value": "list" }
+        ]
+      },
+      {
+        "type": "grid",
+        "cols": 3,
+        "gap": "md",
+        "children": [
+          {
+            "type": "stack",
+            "span": 2,
+            "gap": "md",
+            "children": [
+              {
+                "type": "repeat",
+                "show": { "path": "state.view", "eq": "board" },
+                "each": "sources.visible",
+                "layout": "grid",
+                "cols": 2,
+                "gap": "md",
+                "empty": { "type": "empty", "title": "Nothing in this cut", "body": "Clear the search or pick another stage." },
+                "template": {
+                  "type": "card",
+                  "on": { "click": [{ "do": "set", "path": "state.selectedId", "value": "{{item.id}}" }] },
+                  "selected": { "path": "state.selectedId", "eq": "{{item.id}}" },
+                  "children": [
+                    { "type": "badge", "text": "{{item.stage}}", "tone": "{{item.stage}}", "toneMap": { "Won": "accent", "Negotiation": "ink", "Proposal": "neutral", "Discovery": "neutral" } },
+                    { "type": "heading", "level": 3, "text": "{{item.company}}" },
+                    { "type": "text", "text": "{{item.name}}" },
+                    { "type": "text", "tone": "muted", "text": "{{item.value | currency}} · {{item.owner}}" }
+                  ]
+                }
+              },
+              {
+                "type": "table",
+                "show": { "path": "state.view", "eq": "list" },
+                "caption": "Visible deals",
+                "rows": "{{sources.visible}}",
+                "rowKey": "id",
+                "selectedBind": "state.selectedId",
+                "onRow": [{ "do": "set", "path": "state.selectedId", "value": "{{item.id}}" }],
+                "columns": [
+                  { "key": "company", "label": "House" },
+                  { "key": "name", "label": "Piece" },
+                  { "key": "owner", "label": "Owner" },
+                  { "key": "stage", "label": "Stage", "format": "badge", "toneMap": { "Won": "accent", "Negotiation": "ink" } },
+                  { "key": "value", "label": "Value", "format": "currency" }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "card",
+            "title": "Piece",
+            "show": "sources.selected",
+            "children": [
+              { "type": "kicker", "text": "{{sources.selected.company}}" },
+              { "type": "heading", "level": 3, "text": "{{sources.selected.name}}" },
+              {
+                "type": "keyvalue",
+                "items": [
+                  { "label": "Value", "value": "{{sources.selected.value | currency}}" },
+                  { "label": "Owner", "value": "{{sources.selected.owner}}" }
+                ]
+              },
+              {
+                "type": "select",
+                "label": "Stage",
+                "value": "{{sources.selected.stage}}",
+                "options": [
+                  { "label": "Discovery", "value": "Discovery" },
+                  { "label": "Proposal", "value": "Proposal" },
+                  { "label": "Negotiation", "value": "Negotiation" },
+                  { "label": "Won", "value": "Won" }
+                ],
+                "onChange": [
+                  {
+                    "do": "patch",
+                    "path": "state.deals",
+                    "where": { "field": "id", "eq": "{{state.selectedId}}" },
+                    "set": { "stage": "{{event}}" }
+                  }
+                ]
+              },
+              {
+                "type": "input",
+                "label": "Next step",
+                "value": "{{sources.selected.next}}",
+                "onChange": [
+                  {
+                    "do": "patch",
+                    "path": "state.deals",
+                    "where": { "field": "id", "eq": "{{state.selectedId}}" },
+                    "set": { "next": "{{event}}" }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

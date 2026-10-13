@@ -1,0 +1,181 @@
+{
+  "id": "gallery",
+  "title": "The component shelf",
+  "kicker": "Runtime",
+  "summary": "The blocks every Northwind screen is built from.",
+  "icon": "LayoutGrid",
+  "state": {
+    "note": "linen",
+    "alarm": true,
+    "target": 62,
+    "swatch": "warm"
+  },
+  "sources": [
+    {
+      "id": "points",
+      "kind": "static",
+      "data": [
+        { "label": "Mon", "revenue": 4 },
+        { "label": "Tue", "revenue": 7 },
+        { "label": "Wed", "revenue": 5 },
+        { "label": "Thu", "revenue": 9 },
+        { "label": "Fri", "revenue": 6 }
+      ]
+    },
+    {
+      "id": "rows",
+      "kind": "static",
+      "data": [
+        { "id": "a", "house": "Lumen", "lot": "White 04", "bolts": 40 },
+        { "id": "b", "house": "Sable", "lot": "Lobby red", "bolts": 12 },
+        { "id": "c", "house": "Orchard", "lot": "Guest oat", "bolts": 28 }
+      ]
+    }
+  ],
+  "root": {
+    "type": "stack",
+    "gap": "lg",
+    "children": [
+      {
+        "type": "stack",
+        "gap": "sm",
+        "children": [
+          { "type": "kicker", "text": "Runtime" },
+          { "type": "heading", "level": 1, "text": "The component shelf" },
+          {
+            "type": "text",
+            "tone": "muted",
+            "text": "Northwind does not grow a new screen by writing React. A page is a tree of these blocks, plus state, sources, and actions. The studio edits that tree."
+          },
+          { "type": "link", "to": "studio", "page": "gallery", "label": "Open this page in the studio" }
+        ]
+      },
+      {
+        "type": "grid",
+        "cols": 2,
+        "gap": "md",
+        "children": [
+          {
+            "type": "card",
+            "title": "Bound to state",
+            "children": [
+              { "type": "input", "label": "Material", "bind": "state.note", "placeholder": "linen" },
+              {
+                "type": "segmented",
+                "label": "Swatch",
+                "bind": "state.swatch",
+                "options": [
+                  { "label": "Warm", "value": "warm" },
+                  { "label": "Cool", "value": "cool" },
+                  { "label": "Ink", "value": "ink" }
+                ]
+              },
+              { "type": "switch", "label": "Yard alarm", "bind": "state.alarm" },
+              { "type": "slider", "label": "Load target", "bind": "state.target", "min": 0, "max": 100, "step": 1 },
+              { "type": "progress", "label": "Load target", "value": "{{state.target}}" },
+              {
+                "type": "text",
+                "text": "{{state.note}} · {{state.swatch}} · alarm {{state.alarm}} · {{state.target | percent}}"
+              },
+              {
+                "type": "button",
+                "label": "Toast the note",
+                "tone": "quiet",
+                "on": { "click": [{ "do": "toast", "message": "{{state.note}} at {{state.target}}%" }] }
+              }
+            ]
+          },
+          {
+            "type": "card",
+            "title": "A week of bolts",
+            "children": [
+              {
+                "type": "chart",
+                "variant": "bar",
+                "label": "Bolts by day",
+                "data": "{{sources.points}}",
+                "x": "label",
+                "y": "revenue"
+              }
+            ]
+          },
+          {
+            "type": "card",
+            "title": "Marks",
+            "children": [
+              {
+                "type": "row",
+                "gap": "sm",
+                "children": [
+                  { "type": "badge", "text": "Won", "tone": "accent" },
+                  { "type": "badge", "text": "Negotiation", "tone": "ink" },
+                  { "type": "badge", "text": "Discovery", "tone": "neutral" }
+                ]
+              },
+              { "type": "avatar", "name": "Ada Voss", "role": "Buyer · Hudson" },
+              {
+                "type": "keyvalue",
+                "items": [
+                  { "label": "Desk", "value": "Northwind" },
+                  { "label": "Runtime", "value": "Manifest" }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "stack",
+            "gap": "md",
+            "children": [
+              {
+                "type": "callout",
+                "title": "Show and hide are data",
+                "body": "A node stays out of the tree when its show clause is false. The pipeline board and list are the same page with two clauses."
+              },
+              {
+                "type": "accordion",
+                "items": [
+                  { "title": "Where do pages live?", "body": "Shipped pages are JSON files in the app. Studio edits stay in this browser, in front of those files." },
+                  { "title": "What can an action do?", "body": "Set state, patch a row, append, remove, toast, navigate, refetch a source, or reset the page data." },
+                  { "title": "What can a source call?", "body": "Static JSON, a derive (filter, search, sum), or HTTPS on Frankfurter and Open-Meteo." }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "card",
+        "title": "Lots",
+        "children": [
+          {
+            "type": "table",
+            "caption": "Sample lots",
+            "rows": "{{sources.rows}}",
+            "columns": [
+              { "key": "house", "label": "House" },
+              { "key": "lot", "label": "Lot" },
+              { "key": "bolts", "label": "Bolts", "format": "number" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "justify": "between",
+        "align": "center",
+        "children": [
+          {
+            "type": "dialog",
+            "trigger": "Read the short version",
+            "title": "How a page is made",
+            "body": "Declare the tree. The runtime does the rest.",
+            "children": [
+              { "type": "text", "text": "Layout is stack, row, grid, and repeat. Inputs bind to state. Buttons run actions. HTTP sources fill {{sources.id}} once they return." }
+            ]
+          },
+          { "type": "link", "to": "brief", "label": "Back to the morning brief" }
+        ]
+      }
+    ]
+  }
+}
